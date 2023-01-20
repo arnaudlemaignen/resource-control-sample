@@ -20,4 +20,4 @@ jobs:
     - name: Build the Docker image
       run: |
         docker build . --tag ghcr.io/arnaudlemaignen/resource-control-sample:latest
-        docker push ghcr.io/arnaudlemaignen/resource-control-sample:latest
+
