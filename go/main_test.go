@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 
 //main.go
 func TestReady(t *testing.T) {
-	want := "Resource Model Exporter is ready"
+	want := "Resource Control Sample is ready"
 	if got := Ready(); got != want {
 		t.Errorf("Ready() = %q, want %q", got, want)
 	}
