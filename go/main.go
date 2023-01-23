@@ -30,9 +30,9 @@ func Init() *collector.Exporter {
 		log.Info(".env file absent, assume env variables are set.")
 	}
   
-	minPx := utils.GetInt64Env("PIXELS_MIN",1)
-	maxPx := utils.GetInt64Env("PIXELS_MAX",1000000)//387*248 = 95,976
-	stepPx := utils.GetInt64Env("PIXELS_STEP",1000)
+	minPx := utils.GetIntEnv("PIXELS_MIN",1)
+	maxPx := utils.GetIntEnv("PIXELS_MAX",1000000)//387*248 = 95,976
+	stepPx := utils.GetIntEnv("PIXELS_STEP",1000)
 
 	log.Info("Min Pixels   => ", minPx)
 	log.Info("Max Pixels   => ", maxPx)

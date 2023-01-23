@@ -7,6 +7,7 @@ import (
 	"golang.org/x/image/draw"
 	"image"
 	"image/png"
+	"math"
 
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -20,40 +21,70 @@ func (e *Exporter) CollectResizeMetrics(ch chan<- prometheus.Metric) {
 		metricMeasurementRound, prometheus.GaugeValue, float64(round), 
 	)
 
-	e.ResizeImage(ch)
+	//if the tens is even no resizing
+	//resizing if odd
+
+	//even
+	if(round/10 % 2 == 0){
+		//do nothing but pushing 0 pixels metric
+		ch <- prometheus.MustNewConstMetric(
+			metricMeasurementPixels, prometheus.GaugeValue, float64(0), 
+		)
+		ch <- prometheus.MustNewConstMetric(
+			metricMeasurementWrittenBytes, prometheus.GaugeValue, float64(0), 
+		)
+		ch <- prometheus.MustNewConstMetric(
+			metricMeasurementThroughWrittenBytes, prometheus.GaugeValue, float64(0), 
+		)
+		log.Info("No Resize")
+	} else {
+		//from 0 to 9 resize the image by stepPix in both H&W
+		mod := round % 10
+		x := e.src.Bounds().Max.X+int(e.stepPix) * mod
+		y := e.src.Bounds().Max.Y+int(e.stepPix) * mod
+		e.ResizeImage(ch,x,y)
+	}
 }
 
 //https://github.com/MariaLetta/free-gophers-pack
 //https://stackoverflow.com/questions/22940724/go-resizing-images
-func (e *Exporter) ResizeImage(ch chan<- prometheus.Metric) {
-	startRound := time.Now()
-	log.Info("Begin measurement of Round : ", round)
-	input, _ := os.Open("resources/fine_387x248.png")
-	defer input.Close()
-	
-	output, _ := os.Create("resized.png")
+func (e *Exporter) ResizeImage(ch chan<- prometheus.Metric, x , y int) {
+	start := time.Now()
+
+	//RENDERING IMAGE
+	output, _ := os.Create(imageOut)
 	defer output.Close()
-	
-	// Decode the image (from PNG to image.Image):
-	src, _ := png.Decode(input)
-	
-	//every 10 rounds we add 1 step
-	tens := round % 10
-	x := src.Bounds().Max.X+int(e.stepPix) * tens
-	y := src.Bounds().Max.Y+int(e.stepPix) * tens
+	// Set the expected size
+	dst := image.NewRGBA(image.Rect(0, 0, x, y))	
+	// Resize with the best quality (so it should consume some resource)
+	draw.CatmullRom.Scale(dst, dst.Rect, e.src, e.src.Bounds(), draw.Over, nil)	
+	// Encode the output
+	startEncoding := time.Now()
+	png.Encode(output, dst)
+	end := time.Now()
+
+	//WRITING METRICS
 	totalPixels := x * y
-	log.Info(" Round : ", round, " tens : ",tens, " pixels ",totalPixels)
 	ch <- prometheus.MustNewConstMetric(
 		metricMeasurementPixels, prometheus.GaugeValue, float64(totalPixels), 
 	)
+	fi, err := os.Stat(imageOut)
+	if err == nil {
+		log.Info("hello ",end.Sub(startEncoding))
+		log.Info("hello 2 ",float64(end.Sub(startEncoding)/time.Microsecond)/1000000)
+		ch <- prometheus.MustNewConstMetric(
+			metricMeasurementWrittenBytes, prometheus.GaugeValue, float64(fi.Size()), 
+		)
+		ch <- prometheus.MustNewConstMetric(
+			metricMeasurementThroughWrittenBytes, prometheus.GaugeValue, float64(fi.Size())/(float64(end.Sub(startEncoding)/time.Microsecond)/1000000), 
+		)
+	} else {
+		log.Error("Written Bytes error : ",err)
+	}
 
-	// Set the expected size that you want:
-	dst := image.NewRGBA(image.Rect(0, 0, x, y))
-	
-	// Resize with the best quality (so it should consume some resource)
-	draw.CatmullRom.Scale(dst, dst.Rect, src, src.Bounds(), draw.Over, nil)
-	
-	// Encode to `output`:      
-	png.Encode(output, dst)
-	log.Info("End measurement of Round : ", round, " with resizing ", totalPixels, " pixels in ", time.Since(startRound))
+	log.Info("Resized image is ", math.Floor(float64(totalPixels)/1000000*100)/100, " M pixels, ", 
+	          math.Floor(float64(fi.Size())/(1024*1024)*100)/100, " MiB, ",
+			  math.Floor((float64(fi.Size())/(float64(end.Sub(startEncoding)/time.Microsecond)/1000000))/(1024*1024)*100)/100, " MiB/s, ",
+			  "overall duration ", end.Sub(start), 
+			  " (resizing ",startEncoding.Sub(start)," / writing ",end.Sub(startEncoding), ")")
 }
