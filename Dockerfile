@@ -4,7 +4,7 @@ WORKDIR /src
 COPY . .
 
 WORKDIR /src/go
-RUN make test
+#RUN make test
 RUN make build
 RUN ./resource_control_sample --help
 

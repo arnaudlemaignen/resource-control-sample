@@ -70,8 +70,6 @@ func (e *Exporter) ResizeImage(ch chan<- prometheus.Metric, x , y int) {
 	)
 	fi, err := os.Stat(imageOut)
 	if err == nil {
-		log.Info("hello ",end.Sub(startEncoding))
-		log.Info("hello 2 ",float64(end.Sub(startEncoding)/time.Microsecond)/1000000)
 		ch <- prometheus.MustNewConstMetric(
 			metricMeasurementWrittenBytes, prometheus.GaugeValue, float64(fi.Size()), 
 		)
