@@ -13,6 +13,8 @@ LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com
 
 COPY --from=build-stage /src/go/resource_control_sample /
 COPY go/resources/ /resources/
+RUN mkdir /output/
+RUN chown "nobody:nobody" /output/
 RUN chmod +x /resource_control_sample
 
 USER nobody

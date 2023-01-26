@@ -76,13 +76,12 @@ func (e *Exporter) ResizeImage(ch chan<- prometheus.Metric, x , y int) {
 		ch <- prometheus.MustNewConstMetric(
 			metricMeasurementThroughWrittenBytes, prometheus.GaugeValue, float64(fi.Size())/(float64(end.Sub(startEncoding)/time.Microsecond)/1000000), 
 		)
+		log.Info("Resized image is ", math.Floor(float64(totalPixels)/1000000*100)/100, " M pixels, Size ", 
+		math.Floor(float64(fi.Size())/(1024*1024)*100)/100, " MiB, Through W ",
+		math.Floor((float64(fi.Size())/(float64(end.Sub(startEncoding)/time.Microsecond)/1000000))/(1024*1024)*100)/100, " MiB/s, ",
+		"overall duration ", end.Sub(start), 
+		" (resizing ",startEncoding.Sub(start)," / writing ",end.Sub(startEncoding), ")")
 	} else {
 		log.Error("Written Bytes error : ",err)
 	}
-
-	log.Info("Resized image is ", math.Floor(float64(totalPixels)/1000000*100)/100, " M pixels, ", 
-	          math.Floor(float64(fi.Size())/(1024*1024)*100)/100, " MiB, ",
-			  math.Floor((float64(fi.Size())/(float64(end.Sub(startEncoding)/time.Microsecond)/1000000))/(1024*1024)*100)/100, " MiB/s, ",
-			  "overall duration ", end.Sub(start), 
-			  " (resizing ",startEncoding.Sub(start)," / writing ",end.Sub(startEncoding), ")")
 }

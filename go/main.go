@@ -5,6 +5,7 @@ import (
 	"resource-control-sample/pkg/collector"
 	"flag"
 	"net/http"
+	"os"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -13,6 +14,7 @@ import (
 
 var (
 	version           = "v0.01"
+	outputDir		  = "output/"
 	listenAddress     = flag.String("web.listen-address", ":9905", "Address to listen on for telemetry")
 	metricsPath       = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics")
 )
@@ -29,6 +31,8 @@ func Init() *collector.Exporter {
 	if err != nil {
 		log.Info(".env file absent, assume env variables are set.")
 	}
+
+	os.MkdirAll(outputDir, os.ModePerm)
   
 	minPx := utils.GetIntEnv("PIXELS_MIN",1)
 	maxPx := utils.GetIntEnv("PIXELS_MAX",1000000)//387*248 = 95,976

@@ -13,7 +13,7 @@ import (
 var (
 	round     = 0
 	imageIn = "resources/fine_387x248.png"
-	imageOut = "./resized.png"
+	imageOut = "output/resized.png"
 	namespace = "res_control"
 	// Metrics
 	metricConfig = prometheus.NewDesc(
