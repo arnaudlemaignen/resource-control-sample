@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   publish-resource-control-sample-image:
+    permissions: write-all
     runs-on: ubuntu-latest
     
 
